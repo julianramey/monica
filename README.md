@@ -1,115 +1,132 @@
-# AI Email Agent for Fiona Frills
+# Generic AI Email Assistant
 
-## 1. Project Overview
+This project provides a framework for an AI-powered email assistant that can automatically read, filter, and draft replies to incoming emails. It uses the Microsoft Graph API to interact with an Outlook/Microsoft 365 mailbox and a large language model (LLM) like OpenAI's GPT for generating replies.
 
-This project implements an AI-powered agent designed to manage email replies for the influencer Fiona Frills. The agent automatically fetches unread emails, filters them based on predefined criteria, drafts personalized replies for relevant messages using an AI language model, and sends these replies. The primary goal is to efficiently manage customer engagement, answer questions, and promote Fiona's $28 info product, while filtering out administrative emails, auto-replies, and irrelevant inquiries.
+The system is designed to be customizable, allowing users to define the AI's persona, objectives, and specific email filtering rules.
 
-## 2. Core Workflow
+## Features
 
-The agent operates on a scheduled basis:
+*   **Email Reading:** Fetches unread emails from a specified Microsoft 365 account.
+*   **HTML to Text Conversion:** Converts HTML email bodies to clean plain text.
+*   **Customizable Filtering:** Allows users to define rules (using regular expressions) to identify emails that should not receive an AI-generated reply (e.g., out-of-office, automated responses, spam, specific unwanted inquiries).
+*   **Customizable AI Persona & Reply Logic:** Users can define the AI's persona, tone, objectives, and information to include/avoid via a system prompt template.
+*   **Automated Reply Drafting:** Generates draft replies for emails that pass the filtering stage.
+*   **Reply Sending (with delay):** Sends drafted replies after a configurable random delay to appear more human.
+*   **Environment Variable Configuration:** Securely manages API keys and other sensitive settings.
 
-1.  **Fetch Unread Emails**: Periodically retrieves new unread emails from Fiona's Microsoft Outlook inbox using the Microsoft Graph API.
-2.  **Filter Messages**: Each fetched email is processed through a filtering system (`utils/filters.py`). This system uses a combination of sender deny lists, checks for empty bodies, and a comprehensive set of regular expressions to identify and exclude:
-    *   Out-of-office notices and vacation auto-replies.
-    *   Standard automated responses (e.g., "message received").
-    *   Technical reports (e.g., DMARC reports).
-    *   Emails from no-reply addresses.
-    *   Inquiries about Fiona paying for services, collaborations where she is expected to pay, or discussions about rates she would incur.
-    *   Explicitly negative or uninterested replies (e.g., "unsubscribe," "not interested").
-    *   Basic spam or scam messages.
-3.  **Enqueue Relevant Emails**: Emails that pass the filtering stage are added to a sending queue with a randomized delay (configurable, typically 1-6 hours) to simulate natural response times.
-4.  **Draft AI Reply**: When an email is due for a reply, its content (full plain text body) is sent to an AI model (e.g., OpenAI's GPT series) along with a system prompt that defines Fiona's persona and goals. The AI model generates a draft reply.
-5.  **Send Reply & Mark as Read**: The drafted reply is sent from Fiona's email address via the Microsoft Graph API. The original incoming email is then marked as read to prevent reprocessing.
+## Project Workflow
 
-## 3. Key Scripts & Their Roles
+1.  **Authentication:** `graph_auth.py` handles authentication with the Microsoft Graph API using OAuth 2.0 client credentials flow.
+2.  **Email Fetching:** `graph_mail_reader.py` fetches unread emails, extracts relevant information (sender, subject, body), and converts the body to plain text using `BeautifulSoup`.
+3.  **Data Export (Optional):** `export_replies.py` can save the processed email data (including full text body) to `replies.json`. This was used for initial development and can be adapted for logging or analysis.
+4.  **Filtering:** `agent.py` uses `utils/filters.py` to apply a series of regular expression-based filters. The `should_reply` function determines if an email warrants a reply and provides a reason if not.
+5.  **Reply Generation:** If an email should be replied to, `agent.py` calls `gpt/generator.py`.
+    *   `gpt/generator.py` loads a customizable system prompt from `gpt/prompts/system_prompt_template.txt`.
+    *   It then calls the configured LLM (e.g., OpenAI) with the system prompt and the email body to generate a reply.
+6.  **Reply Sending:** `graph_mail_sender.py` (via `agent.py`) sends the generated reply from the configured email account.
+7.  **Main Orchestration:** `agent.py` is the main script that orchestrates the entire process: fetching, filtering, generating, and sending replies. It includes logic for scheduling and delays.
 
-*   **`agent.py`**: The main orchestrator. Manages the scheduling of tasks (fetching, filtering, enqueuing, dispatching replies).
-*   **`graph_mail_reader.py`**: Handles fetching unread emails from Microsoft Graph API. It also cleans the email body content, converting it to plain text using BeautifulSoup and storing it as `full_body_text`.
-*   **`utils/filters.py`**: Contains the core filtering logic. The `should_reply(message)` function determines if an email should be replied to, returning a boolean decision and a reason. This script includes deny lists for sender addresses and a comprehensive set of regex patterns.
-*   **`gpt/generator.py`**: Interfaces with the OpenAI API (or a similar AI model provider if `gpt/generator.py` is adapted).
-*   **`graph_mail_sender.py`**: Sends the AI-drafted replies via Microsoft Graph API and marks the original messages as read.
-*   **`export_replies.py`**: A utility script to fetch unread messages and save their relevant fields (including the full plain text body) to `replies.json`. This is useful for analysis, testing filters, or generating training data.
-*   **`prompt.py`**: A utility script used during development to interact with an AI model to help generate the initial set of regex patterns for `filter.py`. (The refined and active filter logic is now in `utils/filters.py`).
-*   **`graph_auth.py`**: A standalone script likely used for initial testing of Microsoft Graph API authentication. The core authentication logic is also present within the mail reader and sender scripts.
-*   **`draft_replies.py`**: A simpler script that fetches unread emails and generates drafts without the advanced filtering, queuing, or scheduling of `agent.py`. Likely an earlier version or a utility for quick drafting.
-*   **`email_reader.py`**: An alternative script for fetching emails using IMAP, not currently integrated into the main `agent.py` workflow.
+## Core Components
 
-## 4. Setup and Configuration
+*   **`agent.py`**: The main orchestrator. Runs the email processing and reply loop.
+*   **`graph_auth.py`**: Handles Microsoft Graph API authentication.
+*   **`graph_mail_reader.py`**: Reads emails from the Microsoft Graph API.
+*   **`graph_mail_sender.py`**: Sends emails via the Microsoft Graph API.
+*   **`utils/filters.py`**: Contains the `should_reply` function and customizable `FILTER_PATTERNS` to decide if an email needs a reply.
+*   **`gpt/generator.py`**: Interfaces with the LLM (e.g., OpenAI) to generate replies based on a system prompt.
+*   **`gpt/prompts/system_prompt_template.txt`**: A template file where users define the AI's persona, objectives, tone, and guidelines for generating replies. **This is the primary file to edit for customizing AI behavior.**
+*   **`.env.example`**: A template for your environment variables file. Rename to `.env` and fill in your actual credentials.
+*   **`email_reader.py` (Utility):** A simple utility to read and print the content of `replies.json`.
+*   **`draft_replies.py` (Utility):** An older script for drafting replies, largely superseded by `agent.py` and `gpt/generator.py` for automated drafting, but could be adapted for manual review/bulk drafting.
+*   **`prompt.py` (Developer Utility):** A script used during development to generate the initial `filter.py` logic using an LLM. Not part of the core agent runtime.
+*   **`filter.py` (Obsolete):** An older version of the filtering logic. The current, more robust filtering is in `utils/filters.py`. This root `filter.py` can be safely deleted.
 
-### 4.1. Prerequisites
-*   Python 3.x
-*   A Microsoft 365 account with an email address for Fiona.
-*   An Azure AD application registration with appropriate Mail permissions (e.g., `Mail.ReadWrite`, `Mail.Send`) for Microsoft Graph API access.
-*   An OpenAI API key (or access to a similar AI model provider if `gpt/generator.py` is adapted).
+## Setup and Configuration
 
-### 4.2. Installation
-1.  Clone the repository.
-2.  Install Python dependencies. It's recommended to use a virtual environment:
+1.  **Clone the Repository:**
     ```bash
-    python3 -m venv venv
-    source venv/bin/activate  # On Windows use `venv\\Scripts\\activate`
-    pip install -r requirements.txt 
+    git clone <repository-url>
+    cd <repository-directory>
     ```
-    *(Note: A `requirements.txt` file should be created containing necessary packages like `requests`, `msal`, `beautifulsoup4`, `openai`, `schedule`, `python-dotenv`)*
 
-### 4.3. Environment Variables
-Create a `.env` file in the root directory of the project with the following variables:
+2.  **Install Dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+    *(Ensure `requirements.txt` is up-to-date with all necessary packages: `requests`, `beautifulsoup4`, `python-dotenv`, `openai`)*
 
-```env
-# For Microsoft Graph API
-TENANT_ID=YOUR_AZURE_AD_TENANT_ID
-CLIENT_ID=YOUR_AZURE_AD_APP_CLIENT_ID
-CLIENT_SECRET=YOUR_AZURE_AD_APP_CLIENT_SECRET
-EMAIL_ADDRESS=fiona.frills@example.com # The email address the agent will use
+3.  **Configure Microsoft Azure AD Application:**
+    *   Go to the Azure portal and register a new application.
+    *   Note down your **Tenant ID**, **Client ID**.
+    *   Create a **Client Secret** and note it down.
+    *   Grant the following **Application permissions** (not Delegated) to your app for Microsoft Graph:
+        *   `Mail.ReadWrite`
+        *   `Mail.Send`
+    *   Ensure you grant admin consent for these permissions in Azure AD.
 
-# For OpenAI API (or other AI model)
-OPENAI_API_KEY=YOUR_OPENAI_API_KEY
-```
+4.  **Set Up Environment Variables:**
+    *   Rename `.env.example` to `.env`.
+    *   Open `.env` and fill in your Azure AD app details and your OpenAI API key:
+        ```env
+        # --- Microsoft Graph API ---
+        TENANT_ID=YOUR_AZURE_AD_TENANT_ID_HERE
+        CLIENT_ID=YOUR_AZURE_AD_APP_CLIENT_ID_HERE
+        CLIENT_SECRET=YOUR_AZURE_AD_APP_CLIENT_SECRET_HERE
+        EMAIL_ADDRESS=your_agent_email@example.com # The email the agent will use
 
-### 4.4. System Prompt for AI
-Ensure the system prompt file used by `gpt/generator.py` is correctly set up at `gpt/prompts/influencer_insider.txt`. This file should define Fiona's persona, the product she's selling, the desired tone, and any specific instructions for reply generation.
+        # --- OpenAI API ---
+        OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE
 
-## 5. Running the Agent
+        # --- Agent Configuration (Optional) ---
+        # AI_MODEL_NAME="gpt-4-turbo"
+        # MIN_REPLY_DELAY_HOURS=1
+        # MAX_REPLY_DELAY_HOURS=6
+        # AGENT_START_HOUR_PST=7
+        # AGENT_END_HOUR_PST=23
+        ```
+    *   The `EMAIL_ADDRESS` is the Microsoft 365 email account this agent will monitor and send replies from.
 
-To start the main email agent:
+5.  **Customize AI Behavior:**
+    *   Edit `gpt/prompts/system_prompt_template.txt` to define:
+        *   The AI's persona/role.
+        *   Its main objective for replies.
+        *   Key information to include.
+        *   Desired tone.
+        *   Things the AI should avoid.
+    *   This file has detailed inline instructions and examples.
+
+6.  **Customize Email Filtering:**
+    *   Edit `utils/filters.py`.
+    *   Modify the `FILTER_PATTERNS` list. Each entry is a tuple: `(r'regex_pattern', 'reason_for_no_reply')`.
+    *   Add, remove, or modify patterns to suit your needs. The file includes examples for common filters (out-of-office, automated) and placeholders for business-specific rules.
+
+7.  **Review Agent Settings (Optional):**
+    *   Open `agent.py`. You can adjust parameters like:
+        *   `AI_MODEL_NAME` (if not set in `.env`)
+        *   `MIN_REPLY_DELAY_HOURS`, `MAX_REPLY_DELAY_HOURS`
+        *   `AGENT_START_HOUR_PST`, `AGENT_END_HOUR_PST`
+
+## Running the Agent
+
+Once configured, you can run the agent:
+
 ```bash
-python3 agent.py
+python agent.py
 ```
-The agent will then run continuously, fetching and processing emails according to its schedule. You will see log messages in the terminal indicating its activity. Press `Ctrl+C` to stop the agent.
 
-### Utility Scripts:
-*   To export current unread emails to `replies.json` for inspection or testing:
-    ```bash
-    python3 export_replies.py
-    ```
-*   To test the filtering logic directly on `replies.json`:
-    ```bash
-    python3 utils/filters.py 
-    ```
-    (This assumes `utils/filters.py` has its `if __name__ == '__main__':` block configured to process `replies.json`.)
+The agent will periodically check for new emails, filter them, generate replies for eligible emails, and send them.
 
-## 6. Key Configuration Points
+## Development Notes
 
-*   **Agent Scheduling & Delays (`agent.py`):**
-    *   `MIN_DELAY`, `MAX_DELAY`: Control the randomized delay before sending a reply.
-    *   `START_HOUR`, `END_HOUR`: Define the time window (PST) during which replies are dispatched.
-    *   Schedule frequencies (e.g., `schedule.every().hour.do(enqueue_replies)`).
-*   **AI Model (`gpt/generator.py`):**
-    *   `model`: Specifies the AI model used (e.g., "gpt-4.1-nano", "o4-mini", "gpt-4-turbo").
-    *   `max_tokens`, `temperature`: Parameters for the AI model completion.
-*   **Filtering Rules (`utils/filters.py`):**
-    *   `NO_REPLY_ADDRESSES`: List of sender email addresses/domains to always ignore.
-    *   `FILTER_PATTERNS`: The core list of regex patterns and their corresponding reasons for filtering. This is the primary place to refine what gets filtered.
-*   **Email Scope (`graph_mail_reader.py`):**
-    *   The Graph API query currently targets unread messages in the Inbox (`?$filter=isRead eq false`). This can be adjusted if needed.
+*   **`replies.json`**: Generated by `export_replies.py`, it contains a snapshot of emails. Useful for testing filters or AI prompts without hitting the API repeatedly.
+*   **`email_reader.py`**: A simple script to pretty-print the contents of `replies.json`.
+*   **Making it More Generic**: The current setup is a good starting point. To adapt it for completely different use cases, you'd primarily focus on heavily customizing `gpt/prompts/system_prompt_template.txt` and `utils/filters.py`.
 
-## 7. Important Considerations
+## Contributing
 
-*   **Microsoft Graph API Permissions**: Ensure the Azure AD application has the correct and least-privilege permissions required. Application permissions are typically needed for a background agent.
-*   **Token Management**: The scripts handle MSAL token acquisition. Monitor for any persistent token errors.
-*   **Cost Management**: API calls to AI models (like OpenAI) incur costs. The filtering step is crucial to minimize unnecessary calls. Monitor your API usage.
-*   **Testing**: Thoroughly test the agent in a controlled environment before letting it manage live email communications. Review filtered messages and drafted replies carefully.
-*   **Error Handling**: The scripts include some basic error handling, but further enhancements might be needed for a production-robust system.
-*   **Idempotency**: The `mark_as_read` function helps prevent reprocessing emails, which is important.
+If you'd like to contribute, please fork the repository and make a pull request.
+(Further contribution guidelines can be added here if the project becomes public and open to contributions).
 
-This README should provide a good overview for anyone working on or trying to understand the project. 
+## License
+
+(Specify your chosen license here, e.g., MIT License)

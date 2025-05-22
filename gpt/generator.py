@@ -12,7 +12,7 @@ api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 
 # 3. Load your brand prompt
-with open("gpt/prompts/influencer_insider.txt", "r") as f:
+with open("gpt/prompts/system_prompt_template.txt", "r") as f:
     SYSTEM_PROMPT = f.read()
 
 def generate_reply(email_body: str) -> str:

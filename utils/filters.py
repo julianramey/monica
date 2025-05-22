@@ -10,26 +10,26 @@ NO_REPLY_ADDRESSES = [
 
 # Patterns that indicate we should NOT reply, with reasons
 FILTER_PATTERNS = [
+    # --- Generally Useful Filters ---
     # Out‐of‐office / vacation
     (r'\bOut of Office\b', 'Out of office'),
     (r'\bOOO\b', 'Out of office'),
     (r'\bAway Until\b', 'Out of office'),
     (r'\bOn (vacation|holiday)\b', 'Out of office'),
-    (r'\bCurrently out\b', 'Out of office'),
-    (r'\bwill be back on\b', 'Out of office'),
-    (r'away from the (office|desk)', 'Out of office'), # Added from old
+    (r'\bCurrently out', 'Out of office'),
+    (r'\bwill be back on', 'Out of office'),
+    (r'away from the (office|desk)', 'Out of office'),
 
     # Automated / generic replies
     (r'\bauto-?reply\b', 'Automated reply'),
     (r'\bautomatic response\b', 'Automated reply'),
-    (r'\bmessage received\b', 'Automated reply'),
-    (r'\bThanks for your email\b', 'Automated reply'),
-    (r'\bYour email has been.*received\b', 'Automated reply'),
-    (r'\bThank you for contacting\b', 'Automated reply'),
-    (r'\bplease allow.*to respond\b', 'Automated reply'),
-    (r'je vous remercie', 'Automated reply (French)'), # Added from old
-    (r'hours of operation', 'Automated reply (Hours)'), # Added from old
-    # (r'^on.*wrote:$['\n']+', 'Quoted reply only'), # Example for more specific quote check, needs testing
+    (r'\bmessage received', 'Automated reply'),
+    (r'\bThanks for your email', 'Automated reply'),
+    (r'\bYour email has been.*received', 'Automated reply'),
+    (r'\bThank you for contacting', 'Automated reply'),
+    (r'\bplease allow.*to respond', 'Automated reply'),
+    (r'je vous remercie', 'Automated reply (French)'),
+    (r'hours of operation', 'Automated reply (Hours)'),
 
     # DMARC / technical reports
     (r'^\[?Preview\]?.*Report Domain:', 'DMARC report'),
@@ -38,29 +38,29 @@ FILTER_PATTERNS = [
     (r'\bone[- ]time passcode\b', 'Passcode message'),
     (r'\blogin passcode\b', 'Passcode message'),
 
-    # Rate / fee / payment inquiries (enhanced from old and new)
-    (r'\bI charge', 'Discussing rates'),
-    (r'\bmy rate is', 'Discussing rates'),
-    (r'\bflat rate', 'Discussing rates'),
-    (r'\b(fee|price|charges?)s?\b', 'Discussing rates/fees'), # Combined fee/price/charge
-    (r'\$\d+', 'Discussing specific price'), # Added for amounts like $500
-    (r'\bcommission', 'Discussing rates'),
-    (r'\bbudget', 'Discussing rates'),
-    (r'\bpaid partnership', 'Discussing rates (paid by Fiona)'),
-
-    # Collaboration pitches (where Fiona is asked to collab, not selling)
-    (r'\bcollab(oration)?', 'Collaboration request'),
-    (r'\bwork together', 'Collaboration request'),
-
     # Negative / unsubscribe
     (r'\bnot interested', 'Not interested'),
-    (r'\bunsubscribe', 'Unsubscribe request'),
+    (r'\bunsubscribe\b', 'Unsubscribe request'),
     (r'\bremove me', 'Unsubscribe request'),
     (r'\bstop emailing', 'Unsubscribe request'),
 
-    # Inappropriate / aggressive
+    # Basic Spam / Scam
     (r'\bscam\b', 'Spam / scam'),
     (r'\bspam\b', 'Spam / scam'),
+
+    # --- Business/Use-Case Specific Examples (Customize or Remove These) ---
+    # Example: Filtering inquiries about your rates/fees if you are providing a service
+    # (r'\b(what is|what's) your (rate|price|fee)', 'Inquiring about service rates'),
+    # (r'\bhow much do you charge', 'Inquiring about service rates'),
+
+    # Example: Filtering specific types of collaboration requests you don't want
+    # (r'\b(guest post|link exchange) request\b', 'Specific collab type unwanted'),
+    
+    # Example: If you were selling a product and wanted to filter out people asking YOU to pay THEM for a review/post
+    # (r'\bI charge\b', 'User discussing their rates to charge you'),
+    # (r'\bmy rate is\b', 'User discussing their rates to charge you'),
+    # (r'\bflat rate.*for a post\b', 'User discussing their rates to charge you'),
+    # (r'\bpaid partnership.*(you pay me|I require payment)\b', 'User asking for payment for collab'),
 ]
 
 # Compile patterns for performance
