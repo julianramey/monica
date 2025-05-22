@@ -45,15 +45,14 @@ The system is designed to be customizable, allowing users to define the AI's per
 
 1.  **Clone the Repository:**
     ```bash
-    git clone <repository-url>
-    cd <repository-directory>
+    git clone github.com/julianramey/monica
+    cd monica
     ```
 
 2.  **Install Dependencies:**
     ```bash
     pip install -r requirements.txt
     ```
-    *(Ensure `requirements.txt` is up-to-date with all necessary packages: `requests`, `beautifulsoup4`, `python-dotenv`, `openai`)*
 
 3.  **Configure Microsoft Azure AD Application:**
     *   Go to the Azure portal and register a new application.
@@ -125,7 +124,6 @@ The agent will periodically check for new emails, filter them, generate replies 
 ## Contributing
 
 If you'd like to contribute, please fork the repository and make a pull request.
-(Further contribution guidelines can be added here if the project becomes public and open to contributions).
 
 ## License
 
