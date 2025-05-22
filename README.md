@@ -1,25 +1,25 @@
-# AI Email Agent for Fiona Frills
+# AI Email Agent for Microsoft Office
 
 ## 1. Project Overview
 
-This project implements an AI-powered agent designed to manage email replies for the influencer Fiona Frills. The agent automatically fetches unread emails, filters them based on predefined criteria, drafts personalized replies for relevant messages using an AI language model, and sends these replies. The primary goal is to efficiently manage customer engagement, answer questions, and promote Fiona's $28 info product, while filtering out administrative emails, auto-replies, and irrelevant inquiries.
+This project implements an AI-powered agent designed to manage email replies. The agent automatically fetches unread emails, filters them based on predefined criteria, drafts personalized replies for relevant messages using an AI language model, and sends these replies. The primary goal is to efficiently manage customer engagement, answer questions, and promote your needs, while filtering out administrative emails, auto-replies, and irrelevant inquiries.
 
 ## 2. Core Workflow
 
 The agent operates on a scheduled basis:
 
-1.  **Fetch Unread Emails**: Periodically retrieves new unread emails from Fiona's Microsoft Outlook inbox using the Microsoft Graph API.
+1.  **Fetch Unread Emails**: Periodically retrieves new unread emails from your Microsoft Outlook inbox using the Microsoft Graph API.
 2.  **Filter Messages**: Each fetched email is processed through a filtering system (`utils/filters.py`). This system uses a combination of sender deny lists, checks for empty bodies, and a comprehensive set of regular expressions to identify and exclude:
     *   Out-of-office notices and vacation auto-replies.
     *   Standard automated responses (e.g., "message received").
     *   Technical reports (e.g., DMARC reports).
     *   Emails from no-reply addresses.
-    *   Inquiries about Fiona paying for services, collaborations where she is expected to pay, or discussions about rates she would incur.
+    *   Inquiries about paying for services, collaborations where she is expected to pay, or discussions about rates.
     *   Explicitly negative or uninterested replies (e.g., "unsubscribe," "not interested").
     *   Basic spam or scam messages.
 3.  **Enqueue Relevant Emails**: Emails that pass the filtering stage are added to a sending queue with a randomized delay (configurable, typically 1-6 hours) to simulate natural response times.
-4.  **Draft AI Reply**: When an email is due for a reply, its content (full plain text body) is sent to an AI model (e.g., OpenAI's GPT series) along with a system prompt that defines Fiona's persona and goals. The AI model generates a draft reply.
-5.  **Send Reply & Mark as Read**: The drafted reply is sent from Fiona's email address via the Microsoft Graph API. The original incoming email is then marked as read to prevent reprocessing.
+4.  **Draft AI Reply**: When an email is due for a reply, its content (full plain text body) is sent to an AI model (e.g., OpenAI's GPT series) along with a system prompt that defines your persona and goals. The AI model generates a draft reply.
+5.  **Send Reply & Mark as Read**: The drafted reply is sent from your email address via the Microsoft Graph API. The original incoming email is then marked as read to prevent reprocessing.
 
 ## 3. Key Scripts & Their Roles
 
@@ -38,7 +38,7 @@ The agent operates on a scheduled basis:
 
 ### 4.1. Prerequisites
 *   Python 3.x
-*   A Microsoft 365 account with an email address for Fiona.
+*   A Microsoft 365 account with an email address.
 *   An Azure AD application registration with appropriate Mail permissions (e.g., `Mail.ReadWrite`, `Mail.Send`) for Microsoft Graph API access.
 *   An OpenAI API key (or access to a similar AI model provider if `gpt/generator.py` is adapted).
 
@@ -67,7 +67,7 @@ OPENAI_API_KEY=YOUR_OPENAI_API_KEY
 ```
 
 ### 4.4. System Prompt for AI
-Ensure the system prompt file used by `gpt/generator.py` is correctly set up at `gpt/prompts/influencer_insider.txt`. This file should define Fiona's persona, the product she's selling, the desired tone, and any specific instructions for reply generation.
+Ensure the system prompt file used by `gpt/generator.py` is correctly set up at `gpt/prompts/influencer_insider.txt`. This file should define your persona, the product your selling, the desired tone, and any specific instructions for reply generation.
 
 ## 5. Running the Agent
 
