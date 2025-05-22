@@ -129,4 +129,4 @@ If you'd like to contribute, please fork the repository and make a pull request.
 
 ## License
 
-(Specify your chosen license here, e.g., MIT License)
+MIT License
