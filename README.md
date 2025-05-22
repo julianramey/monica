@@ -60,7 +60,7 @@ Create a `.env` file in the root directory of the project with the following var
 TENANT_ID=YOUR_AZURE_AD_TENANT_ID
 CLIENT_ID=YOUR_AZURE_AD_APP_CLIENT_ID
 CLIENT_SECRET=YOUR_AZURE_AD_APP_CLIENT_SECRET
-EMAIL_ADDRESS=fiona.frills@example.com # The email address the agent will use
+EMAIL_ADDRESS=you@example.com # The email address the agent will use
 
 # For OpenAI API (or other AI model)
 OPENAI_API_KEY=YOUR_OPENAI_API_KEY
