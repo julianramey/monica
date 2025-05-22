@@ -1,4 +1,4 @@
-# Generic AI Email Assistant
+# AI Email Agent (Monica)
 
 This project provides a framework for an AI-powered email assistant that can automatically read, filter, and draft replies to incoming emails. It uses the Microsoft Graph API to interact with an Outlook/Microsoft 365 mailbox and a large language model (LLM) like OpenAI's GPT for generating replies.
 
